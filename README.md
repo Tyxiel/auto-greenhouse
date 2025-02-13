@@ -8,8 +8,7 @@ An automatic greenhouse with wifi connection based on arduino and ESP32
 ## 1. Install Arduino IDE
 https://www.arduino.cc/en/software
 
-## 2. Download Modules
-Inside Arduino IDE
+## 2. Download Modules (Inside Arduino IDE)
 
 ### Atencion! You need to add this link to your settings (Board Manager URL)
 https://dl.espressif.com/dl/package_esp32_index.json
