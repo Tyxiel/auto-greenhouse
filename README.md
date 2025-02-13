@@ -11,7 +11,7 @@ An automatic greenhouse with wifi connection based on arduino and ESP32
 ## 2. Download Modules (Inside Arduino IDE)
 
 ### Download and install
-[CP210x USB to UART Bridge VCP Drivers] (https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers)
+[CP210x USB to UART Bridge VCP Drivers](https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers)
 
 ### Add this link to your settings (Board Manager URL)
 https://dl.espressif.com/dl/package_esp32_index.json
