@@ -33,6 +33,9 @@ const byte lm35 = A5;
 unsigned short int tempValue = 0;
 float temperature = 0;
 
+// Fan
+const byte fan = 8;
+
 // Piezo
 const byte piezo = 9;
 
@@ -45,7 +48,6 @@ const byte ledGreen = A4;
 const byte esp32 = 13;
 
 // Relays
-const byte singleRelay = 8;
 const byte doubleRelayOne = 9;
 const byte doubleRelayTwo = 10;
 
@@ -68,6 +70,9 @@ void setup() {
 
   // Temperature Sensor
   pinMode(lm35, INPUT);
+
+  // Fan
+  pinMode(fan, OUTPUT);
   
   // Piezo
   pinMode(piezo, OUTPUT);
@@ -81,7 +86,6 @@ void setup() {
   pinMode(esp32, OUTPUT);
 
   // Relays
-  pinMode(singleRelay, OUTPUT);
   pinMode(doubleRelayOne, OUTPUT);
   pinMode(doubleRelayTwo, OUTPUT);
 
@@ -121,9 +125,9 @@ void loop() {
 
   // Temperature
   if(temperature > 30) {
-    digitalWrite(singleRelay, HIGH);
+    digitalWrite(fan, HIGH);
   } else {
-    digitaalWrite(singleRelay, LOW);
+    digitaalWrite(fan, LOW);
   }
   
   delay(250);
