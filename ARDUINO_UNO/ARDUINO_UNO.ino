@@ -40,8 +40,6 @@ const byte fan = 8;
 const byte piezo = 9;
 
 // LED
-const byte ledRed = A2;
-const byte ledYellow = A3;
 const byte ledGreen = A4;
 
 // ESP32
@@ -78,8 +76,6 @@ void setup() {
   pinMode(piezo, OUTPUT);
   
   // LED
-  pinMode(ledRed, OUTPUT);
-  pinMode(ledYellow, OUTPUT);
   pinMode(ledGreen, OUTPUT);
   
   // ESP32
@@ -118,9 +114,9 @@ void loop() {
     // tone(piezo, 5000, 10000);
     //avisar pelo esp
   } else if(humidity < 60) {
-     digitalWrite(ledYellow, HIGH);
+     
   } else {
-    digitalWrite(ledGreen, HIGH);
+    
   }
 
   // Temperature
