@@ -24,9 +24,14 @@ const byte humVCC = 12;
 const byte humSensor = A0;
 unsigned short int humidity = 0;
 
-// Brightness
+// Brightness Sensor
 const byte brightnessSensor = A1;
 unsigned short int brightness = 0;
+
+// Temperature Sensor (LM35)
+const byte lm35 = A5;
+unsigned short int tempValue = 0;
+float temperature = 0;
 
 // Piezo
 const byte piezo = 9;
@@ -60,6 +65,9 @@ void setup() {
   
   // Brigthness Sensor
   pinMode(brightnessSensor, INPUT);
+
+  // Temperature Sensor
+  pinMode(lm35, INPUT);
   
   // Piezo
   pinMode(piezo, OUTPUT);
@@ -85,6 +93,7 @@ void loop() {
   reset();
   humRead();
   brightRead();
+  tempRead();
   delay(500);
   
   // Sun
@@ -109,7 +118,13 @@ void loop() {
   } else {
     digitalWrite(ledGreen, HIGH);
   }
-  
+
+  // Temperature
+  if(temperature > 30) {
+    digitalWrite(singleRelay, HIGH);
+  } else {
+    digitaalWrite(singleRelay, LOW);
+  }
   
   delay(250);
 }
@@ -130,7 +145,7 @@ void humRead() {
   
   Serial.println("Humidity: " + String(humidity));
   lcd.setCursor(0, 0);
-  lcd.print("Humidity: " + String(humidity));
+  lcd.print("Umid.: " + String(humidity));
 }
 
 void brightRead() {
@@ -154,4 +169,13 @@ void reset() {
   digitalWrite(ledRed, LOW);
   digitalWrite(ledYellow, LOW);
   digitalWrite(ledGreen, LOW);
+}
+
+void tempRead() {
+  tempValue = analogRead(lm35);
+  temperature = (tempValue * 5.0 / 1024.0) * 100.0;
+
+  Serial.println("Temperature: " + String(temperature) + "°C");
+  lcd.setCursor(9, 0);
+  lcd.print("- " + String(temperature) + "°C");
 }
