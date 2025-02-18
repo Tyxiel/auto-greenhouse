@@ -31,13 +31,18 @@ unsigned short int brightness = 0;
 // Piezo
 const byte piezo = 9;
 
-// ESP32
-const byte esp32 = 13;
-
 // LED
 const byte ledRed = A2;
 const byte ledYellow = A3;
 const byte ledGreen = A4;
+
+// ESP32
+const byte esp32 = 13;
+
+// Relays
+const byte singleRelay = 8;
+const byte doubleRelayOne = 9;
+const byte doubleRelayTwo = 10;
 
 void setup() {
   // LCD
@@ -66,7 +71,12 @@ void setup() {
   
   // ESP32
   pinMode(esp32, OUTPUT);
-  
+
+  // Relays
+  pinMode(singleRelay, OUTPUT);
+  pinMode(doubleRelayOne, OUTPUT);
+  pinMode(doubleRelayTwo, OUTPUT);
+
   // Serial
   Serial.begin(9600);
 }
