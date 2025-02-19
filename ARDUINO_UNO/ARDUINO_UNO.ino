@@ -1,6 +1,5 @@
 // Libraries
 #include <LiquidCrystal.h>
-#include <Servo.h>
 
 // LCD
 const byte rs = 2;
@@ -11,13 +10,6 @@ const byte db6 = 6;
 const byte db7 = 7;
 
 LiquidCrystal lcd(rs, e, db4, db5, db6, db7);
-
-// Servos
-Servo sLeft;
-const byte servoLeftPin = 11;
-Servo sRight;
-const byte servoRightPin = 10;
-unsigned short int position = 0;
 
 // Humidity Sensor
 const byte humVCC = 12;
@@ -30,14 +22,12 @@ unsigned short int brightness = 0;
 
 // Temperature Sensor (LM35)
 const byte lm35 = A5;
+const byte powerSupply = A3;
 unsigned short int tempValue = 0;
 float temperature = 0;
 
 // Fan
 const byte fan = 8;
-
-// Piezo
-const byte piezo = 9;
 
 // LED
 const byte ledGreen = A4;
@@ -46,18 +36,12 @@ const byte ledGreen = A4;
 const byte esp32 = 13;
 
 // Relays
-const byte doubleRelayOne = 9;
-const byte doubleRelayTwo = 10;
+const byte relayIrrigation = 9;
+const byte relayDrainage = 10; 
 
 void setup() {
   // LCD
   lcd.begin(16, 2);
-  
-  // Servos
-  sLeft.attach(servoLeftPin);
-  sRight.attach(servoRightPin);
-  sLeft.write(0);
-  sRight.write(0);
   
   // Humidity Sensor
   pinMode(humVCC, OUTPUT);
@@ -68,12 +52,11 @@ void setup() {
 
   // Temperature Sensor
   pinMode(lm35, INPUT);
+  pinMode(powerSupply, OUTPUT);
+  digitalWrite(powerSupply, HIGH);
 
   // Fan
   pinMode(fan, OUTPUT);
-  
-  // Piezo
-  pinMode(piezo, OUTPUT);
   
   // LED
   pinMode(ledGreen, OUTPUT);
@@ -82,8 +65,10 @@ void setup() {
   pinMode(esp32, OUTPUT);
 
   // Relays
-  pinMode(doubleRelayOne, OUTPUT);
-  pinMode(doubleRelayTwo, OUTPUT);
+  pinMode(relayIrrigation, OUTPUT);
+  pinMode(relayDrainage, OUTPUT);
+  digitalWrite(relayIrrigation, LOW);
+  digitalWrite(relayDrainage, LOW);
 
   // Serial
   Serial.begin(9600);
@@ -96,26 +81,19 @@ void loop() {
   tempRead();
   delay(500);
   
-  // Sun
-  if (brightness > 90 && position != 45) {
-    unsigned short int position = 45;
-    sLeft.write(45);
-    sRight.write(position);
-    //avisar no esp
-  } else {
-  	unsigned short int position = 0;
-    sLeft.write(position);
-    sRight.write(position);
-  }
-  
   // Humidity
-  if(humidity < 25){
-    // tone(piezo, 5000, 10000);
-    //avisar pelo esp
-  } else if(humidity < 60) {
-     
+  if (humidity < 25) {
+    digitalWrite(relayIrrigation, HIGH);
+    digitalWrite(relayDrainage, LOW);
+    Serial.println("Irrigation pump ON");
+  } else if (humidity > 60) {
+    digitalWrite(relayIrrigation, LOW);
+    digitalWrite(relayDrainage, HIGH);
+    Serial.println("Drainage pump ON");
   } else {
-    
+    digitalWrite(relayIrrigation, LOW);
+    digitalWrite(relayDrainage, LOW);
+    Serial.println("Both pumps OFF");
   }
 
   // Temperature
@@ -130,7 +108,6 @@ void loop() {
 
 void humRead() {
   digitalWrite(humVCC, HIGH);
-  
   delay(20);
   
   humidity = analogRead(humSensor);
@@ -144,7 +121,7 @@ void humRead() {
   
   Serial.println("Humidity: " + String(humidity));
   lcd.setCursor(0, 0);
-  lcd.print("Umid.: " + String(humidity));
+  lcd.print("U: " + String(humidity));
 }
 
 void brightRead() {
@@ -156,23 +133,25 @@ void brightRead() {
   lcd.print("Brightness: " + String(brightness));
 }
 
+void tempRead() {
+  tempValue = analogRead(lm35);
+  float voltage = tempValue * (5.0 / 1023.0);
+  temperature = voltage * 100;
+  
+  Serial.println("Temperature: " + String(temperature) + " °C");
+  // Exibição da temperatura na LCD, atualizando a posição desejada
+  lcd.setCursor(7, 0);
+  lcd.print(String(temperature) + "C");
+}
+
 // Reset LCD, Piezo and LED
 void reset() {
   // LCD
   lcd.clear();
   
-  // Piezo
-  noTone(piezo);
-  
   // LED
   digitalWrite(ledGreen, LOW);
-}
 
-void tempRead() {
-  tempValue = analogRead(lm35);
-  temperature = (tempValue * 5.0 / 1024.0) * 100.0;
-
-  Serial.println("Temperature: " + String(temperature) + "°C");
-  lcd.setCursor(9, 0);
-  lcd.print("- " + String(temperature) + "°C");
+  // Serial
+  Serial.println(" ");
 }
