@@ -92,11 +92,10 @@ void loop() {
     digitalWrite(relayIrrigation, LOW);
     digitalWrite(relayDrainage, HIGH);
     Serial.println("Drainage pump ON");
-    lcd.print("Drain ON");
+    lcd.print("Drn ON");
   } else {
     digitalWrite(relayIrrigation, LOW);
     digitalWrite(relayDrainage, LOW);
-    lcd.print("Both OFF");
     Serial.println("Both pumps OFF");
   }
 
