@@ -81,20 +81,29 @@ void loop() {
   tempRead();
   delay(500);
   
+  lcd.setCursor(9, 0);
   // Humidity
   if (humidity < 25) {
     digitalWrite(relayIrrigation, HIGH);
     digitalWrite(relayDrainage, LOW);
     Serial.println("Irrigation pump ON");
+    lcd.print("Irr ON");
   } else if (humidity > 60) {
     digitalWrite(relayIrrigation, LOW);
     digitalWrite(relayDrainage, HIGH);
     Serial.println("Drainage pump ON");
+    lcd.print("Drain ON");
   } else {
     digitalWrite(relayIrrigation, LOW);
     digitalWrite(relayDrainage, LOW);
+    lcd.print("Both OFF");
     Serial.println("Both pumps OFF");
   }
+
+  // Brightness
+  if(brightness < 75) {
+    // Ligar LEDs simulando iluminação artificial
+  } else {}
 
   // Temperature
   if(temperature > 30) {
@@ -121,27 +130,29 @@ void humRead() {
   
   Serial.println("Humidity: " + String(humidity));
   lcd.setCursor(0, 0);
-  lcd.print("U: " + String(humidity));
+  lcd.print("U: " + String(humidity) + " -");
 }
 
 void brightRead() {
   brightness = analogRead(brightnessSensor);
-  // brightness = map(brightness, 54, 974, 0, 100);
+  // brightness = map(brightness, 930, 1023, 0, 100);
   
   Serial.println("Brightness: " + String(brightness));
   lcd.setCursor(0, 1);
-  lcd.print("Brightness: " + String(brightness));
+  lcd.print("LUM: " + String(brightness));
 }
 
 void tempRead() {
   tempValue = analogRead(lm35);
   float voltage = tempValue * (5.0 / 1023.0);
   temperature = voltage * 100;
-  
+  Serial.println(tempValue);
+
+
   Serial.println("Temperature: " + String(temperature) + " °C");
   // Exibição da temperatura na LCD, atualizando a posição desejada
-  lcd.setCursor(7, 0);
-  lcd.print(String(temperature) + "C");
+  lcd.setCursor(10, 1);
+  lcd.print(String(temperature) + " C");
 }
 
 // Reset LCD, Piezo and LED
