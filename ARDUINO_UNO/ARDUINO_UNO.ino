@@ -110,7 +110,6 @@ void loop() {
   
   // Humidity
   if(humidity < 25){
-    digitalWrite(ledRed, HIGH);
     // tone(piezo, 5000, 10000);
     //avisar pelo esp
   } else if(humidity < 60) {
@@ -123,7 +122,7 @@ void loop() {
   if(temperature > 30) {
     digitalWrite(fan, HIGH);
   } else {
-    digitaalWrite(fan, LOW);
+    digitalWrite(fan, LOW);
   }
   
   delay(250);
@@ -166,8 +165,6 @@ void reset() {
   noTone(piezo);
   
   // LED
-  digitalWrite(ledRed, LOW);
-  digitalWrite(ledYellow, LOW);
   digitalWrite(ledGreen, LOW);
 }
 
