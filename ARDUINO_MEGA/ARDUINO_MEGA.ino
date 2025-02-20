@@ -158,10 +158,8 @@ void brightRead() {
 
 void tempRead() {
   tempValue = analogRead(lm35);
-  float voltage = tempValue * (5.0 / 1023.0);
-  temperature = voltage * 100;
-  Serial.println(tempValue);
-
+  temperature = (tempValue - 100.2) / 2.05;
+  Serial.println(temperature);
 
   Serial.println("Temperature: " + String(temperature) + " °C");
   // Exibição da temperatura na LCD, atualizando a posição desejada
