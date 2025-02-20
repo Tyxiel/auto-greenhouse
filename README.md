@@ -25,3 +25,30 @@ https://dl.espressif.com/dl/package_esp32_index.json
   <li>LiquidCrystal</li>
   <li>Servo</li>
 </ol> 
+
+### 3. Resources needed
+
+#### Arduino MEGA (2560)
+<ul>
+  <li>1 12V AC/DC (Used on the fan)</li>
+  <li>3 resistors (2 220 ohns, 1 10k ohns)</li>
+  <li>1 LCD</li>
+  <li>1 servo</li>
+  <li>1 DHT11 (Humidity Sensor)</li>
+  <li>1 LDR resistor (Brightness Sensor)</li>
+  <li>1 LM35 (Temperature Sensor)</li>
+  <li>1 micro-fan (12V, connect to Vin)</li>
+  <li>3 LEDs (1 green, 2 others any color)</li>
+  <li>1 double 10A (5V) relay</li>
+  <li>2 water bombs</li>
+</ul>
+
+#### Arduino UNO
+<ul>
+  <li>1 12V AC/DC</li>
+  <li>2 servos</li>
+  <li>1 button</li>
+  <li>1 resistor (1k ohns)</li>
+</ul>
+
+#### ESP32
