@@ -163,8 +163,13 @@ void tempRead() {
 
   Serial.println("Temperature: " + String(temperature) + " °C");
   // Exibição da temperatura na LCD, atualizando a posição desejada
-  lcd.setCursor(10, 1);
-  lcd.print(String(temperature) + " C");
+  char tempString[6];
+  dtostrf(temperature, 5, 1, tempString);
+  lcd.setCursor(7, 1);
+  lcd.print("T: ");
+  lcd.setCursor(9, 1);
+  lcd.print(tempString);
+  lcd.print(" C");
 }
 
 void checkResources() {
