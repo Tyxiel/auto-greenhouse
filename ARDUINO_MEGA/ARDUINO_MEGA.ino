@@ -107,7 +107,7 @@ void loop() {
 
   // Brightness
   if(brightness < 75) {
-    digitalWrite(ledPin, HIGH)
+    digitalWrite(ledPin, HIGH);
     Serial.println("LEDs ON");
   } else {
     digitalWrite(ledPin, LOW);
