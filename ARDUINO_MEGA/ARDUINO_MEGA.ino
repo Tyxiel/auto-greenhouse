@@ -39,9 +39,6 @@ const byte fan = 8;
 const byte ledGreen = A4;
 const byte ledPin = 11;
 
-// ESP32
-const byte esp32 = 13;
-
 // Relays
 const byte relayIrrigation = 9;
 const byte relayDrainage = 10; 
@@ -72,9 +69,6 @@ void setup() {
   // LED
   pinMode(ledGreen, OUTPUT);
   pinMode(ledPin, OUTPUT);
-  
-  // ESP32
-  pinMode(esp32, OUTPUT);
 
   // Relays
   pinMode(relayIrrigation, OUTPUT);
