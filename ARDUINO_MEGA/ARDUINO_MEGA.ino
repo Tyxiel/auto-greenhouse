@@ -31,6 +31,7 @@ const byte fan = 8;
 
 // LED
 const byte ledGreen = A4;
+const byte ledPin = 11;
 
 // ESP32
 const byte esp32 = 13;
@@ -60,6 +61,7 @@ void setup() {
   
   // LED
   pinMode(ledGreen, OUTPUT);
+  pinMode(ledPin, OUTPUT);
   
   // ESP32
   pinMode(esp32, OUTPUT);
@@ -101,8 +103,11 @@ void loop() {
 
   // Brightness
   if(brightness < 75) {
-    // Ligar LEDs simulando iluminação artificial
-  } else {}
+    digitalWrite(ledPin, HIGH)
+    Serial.println("LEDs ON");
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
 
   // Temperature
   if(temperature > 30) {
@@ -110,6 +115,8 @@ void loop() {
   } else {
     digitalWrite(fan, LOW);
   }
+  
+  checkResources();
   
   delay(250);
 }
@@ -152,6 +159,35 @@ void tempRead() {
   // Exibição da temperatura na LCD, atualizando a posição desejada
   lcd.setCursor(10, 1);
   lcd.print(String(temperature) + " C");
+}
+
+void checkResources() {
+  bool allResourcesWorking = true;
+
+  // Verifica a umidade
+  if (humidity < 0 || humidity > 100) {
+    allResourcesWorking = false;
+    Serial.println("Humidity sensor error");
+  }
+
+  // Verifica a luminosidade
+  if (brightness < 0 || brightness > 100) {
+    allResourcesWorking = false;
+    Serial.println("Brightness sensor error");
+  }
+
+  // Verifica a temperatura
+  if (temperature < -40 || temperature > 125) {
+    allResourcesWorking = false;
+    Serial.println("Temperature sensor error");
+  }
+
+  // Se todos os recursos estão funcionando, liga o LED verde
+  if (allResourcesWorking) {
+    digitalWrite(ledGreen, HIGH);
+  } else {
+    digitalWrite(ledGreen, LOW);
+  }
 }
 
 // Reset LCD, Piezo and LED
