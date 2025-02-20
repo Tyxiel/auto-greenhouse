@@ -1,5 +1,6 @@
 // Libraries
 #include <LiquidCrystal.h>
+#include <Servo.h>
 
 // LCD
 const byte rs = 2;
@@ -10,6 +11,11 @@ const byte db6 = 6;
 const byte db7 = 7;
 
 LiquidCrystal lcd(rs, e, db4, db5, db6, db7);
+
+// Servo
+const byte servoPin = A2;
+Servo myServo;
+int servoPosition = 0;
 
 // Humidity Sensor
 const byte humVCC = 12;
@@ -43,6 +49,10 @@ const byte relayDrainage = 10;
 void setup() {
   // LCD
   lcd.begin(16, 2);
+
+  // Servo
+  myServo.attach(servoPin);
+  myServo.write(servoPosition);
   
   // Humidity Sensor
   pinMode(humVCC, OUTPUT);
@@ -112,9 +122,13 @@ void loop() {
   // Temperature
   if(temperature > 30) {
     digitalWrite(fan, HIGH);
+    servoPosition = 180;
   } else {
     digitalWrite(fan, LOW);
+    servoPosition = 0;
   }
+
+  myServo.write(servoPosition);
   
   checkResources();
   
