@@ -13,6 +13,9 @@ bool lastButtonState = LOW;
 bool currentState = LOW;
 bool servoOpen = false;
 
+// ESP32
+const byte esp32 = 13;
+
 void setup() {
   // Servos
   sLeft.attach(servoLeftPin);
@@ -22,6 +25,9 @@ void setup() {
 
   // Button
   pinMode(buttonPin, INPUT_PULLUP);
+
+  // ESP32
+  pinMode(esp32, OUTPUT);
 
   // Serial
   Serial.begin(9600);
@@ -36,9 +42,11 @@ void loop() {
     if (servoOpen) {
       sLeft.write(45);
       sRight.write(45);
+      digitalWrite(esp32, HIGH);
     } else {
       sLeft.write(0);
       sRight.write(0);
+      digitalWrite(esp32, LOW);
     }
     
     delay(250);
