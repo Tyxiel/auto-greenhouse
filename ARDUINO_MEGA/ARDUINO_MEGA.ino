@@ -12,10 +12,22 @@ const byte db7 = 7;
 
 LiquidCrystal lcd(rs, e, db4, db5, db6, db7);
 
-// Servo
-const byte servoPin = A2;
+// Servo FAN
+const byte servoPin = 22;
 Servo myServo;
 int servoPosition = 0;
+
+// Servos CELLING
+Servo sLeft;
+const byte servoLeftPin = 11;
+Servo sRight;
+const byte servoRightPin = 10;
+
+// Button
+const byte buttonPin = 2;
+bool lastButtonState = LOW;
+bool currentState = LOW;
+bool servoOpen = false;
 
 // Humidity Sensor
 const byte humVCC = 12;
@@ -35,6 +47,9 @@ float temperature = 0;
 // Fan
 const byte fan = 8;
 
+// ESP32
+const byte esp32 = 13;
+
 // LED
 const byte ledGreen = A4;
 const byte ledPin = 11;
@@ -47,9 +62,15 @@ void setup() {
   // LCD
   lcd.begin(16, 2);
 
-  // Servo
+  // Servo FAN
   myServo.attach(servoPin);
   myServo.write(servoPosition);
+  
+  // Servo CELLING
+  sLeft.attach(servoLeftPin);
+  sRight.attach(servoRightPin);
+  sLeft.write(0);
+  sRight.write(0);
   
   // Humidity Sensor
   pinMode(humVCC, OUTPUT);
@@ -75,6 +96,12 @@ void setup() {
   pinMode(relayDrainage, OUTPUT);
   digitalWrite(relayIrrigation, LOW);
   digitalWrite(relayDrainage, LOW);
+
+  // Button
+  pinMode(buttonPin, INPUT_PULLUP);
+
+  // ESP32
+  pinMode(esp32, OUTPUT);
 
   // Serial
   Serial.begin(9600);
@@ -123,6 +150,24 @@ void loop() {
   }
 
   myServo.write(servoPosition);
+
+  if (currentState == LOW && lastButtonState == HIGH) {
+    servoOpen = !servoOpen;
+
+    if (servoOpen) {
+      sLeft.write(45);
+      sRight.write(45);
+      digitalWrite(esp32, HIGH);
+    } else {
+      sLeft.write(0);
+      sRight.write(0);
+      digitalWrite(esp32, LOW);
+    }
+    
+    delay(250);
+  }
+
+  lastButtonState = currentState;
   
   checkResources();
   
