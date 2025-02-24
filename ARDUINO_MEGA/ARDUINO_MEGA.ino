@@ -24,7 +24,7 @@ Servo sRight;
 const byte servoRightPin = 10;
 
 // Button
-const byte buttonPin = 2;
+const byte buttonPin = 32;
 bool lastButtonState = LOW;
 bool currentState = LOW;
 bool servoOpen = false;
@@ -40,7 +40,7 @@ unsigned short int brightness = 0;
 
 // Temperature Sensor (LM35)
 const byte lm35 = A5;
-const byte powerSupply = A3;
+const byte powerSupply = 30;
 unsigned short int tempValue = 0;
 float temperature = 0;
 
@@ -51,7 +51,6 @@ const byte fan = 8;
 const byte esp32 = 13;
 
 // LED
-const byte ledGreen = A4;
 const byte ledPin = 11;
 
 // Relays
@@ -88,7 +87,6 @@ void setup() {
   pinMode(fan, OUTPUT);
   
   // LED
-  pinMode(ledGreen, OUTPUT);
   pinMode(ledPin, OUTPUT);
 
   // Relays
@@ -141,7 +139,7 @@ void loop() {
   }
 
   // Temperature
-  if(temperature > 30) {
+  if(temperature > 100) {
     digitalWrite(fan, HIGH);
     servoPosition = 180;
   } else {
@@ -151,6 +149,7 @@ void loop() {
 
   myServo.write(servoPosition);
 
+  currentState = digitalRead(buttonPin);
   if (currentState == LOW && lastButtonState == HIGH) {
     servoOpen = !servoOpen;
 
@@ -169,9 +168,7 @@ void loop() {
 
   lastButtonState = currentState;
   
-  checkResources();
-  
-  delay(250);
+  delay(500);
 }
 
 void humRead() {
@@ -203,8 +200,8 @@ void brightRead() {
 
 void tempRead() {
   tempValue = analogRead(lm35);
-  temperature = (tempValue - 100.2) / 2.05;
-  Serial.println(temperature);
+  float voltage = tempValue * (5.0 / 1023.0);
+  temperature = voltage * 100;
 
   Serial.println("Temperature: " + String(temperature) + " °C");
   // Exibição da temperatura na LCD, atualizando a posição desejada
@@ -217,42 +214,10 @@ void tempRead() {
   lcd.print(" C");
 }
 
-void checkResources() {
-  bool allResourcesWorking = true;
-
-  // Verifica a umidade
-  if (humidity < 0 || humidity > 100) {
-    allResourcesWorking = false;
-    Serial.println("Humidity sensor error");
-  }
-
-  // Verifica a luminosidade
-  if (brightness < 0 || brightness > 100) {
-    allResourcesWorking = false;
-    Serial.println("Brightness sensor error");
-  }
-
-  // Verifica a temperatura
-  if (temperature < -40 || temperature > 125) {
-    allResourcesWorking = false;
-    Serial.println("Temperature sensor error");
-  }
-
-  // Se todos os recursos estão funcionando, liga o LED verde
-  if (allResourcesWorking) {
-    digitalWrite(ledGreen, HIGH);
-  } else {
-    digitalWrite(ledGreen, LOW);
-  }
-}
-
 // Reset LCD, Piezo and LED
 void reset() {
   // LCD
   lcd.clear();
-  
-  // LED
-  digitalWrite(ledGreen, LOW);
 
   // Serial
   Serial.println(" ");
