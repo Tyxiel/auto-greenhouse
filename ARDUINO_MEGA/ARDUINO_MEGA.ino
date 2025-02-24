@@ -19,9 +19,9 @@ int servoPosition = 0;
 
 // Servos CELLING
 Servo sLeft;
-const byte servoLeftPin = 11;
+const byte servoLeftPin = 38;
 Servo sRight;
-const byte servoRightPin = 10;
+const byte servoRightPin = 44;
 
 // Button
 const byte buttonPin = 32;
@@ -152,6 +152,8 @@ void loop() {
   currentState = digitalRead(buttonPin);
   if (currentState == LOW && lastButtonState == HIGH) {
     servoOpen = !servoOpen;
+
+    Serial.println("ABRIIUU");
 
     if (servoOpen) {
       sLeft.write(45);
