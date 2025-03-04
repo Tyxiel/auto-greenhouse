@@ -12,10 +12,8 @@ const byte db7 = 7;
 
 LiquidCrystal lcd(rs, e, db4, db5, db6, db7);
 
-// Servos CELLING
-Servo sLeft;
-const byte servoLeftPin = 38;
-Servo sRight;
+// Servo CELLING
+Servo myServo;
 const byte servoRightPin = 44;
 
 // Button
@@ -57,10 +55,8 @@ void setup() {
   lcd.begin(16, 2);
   
   // Servo CELLING
-  sLeft.attach(servoLeftPin);
-  sRight.attach(servoRightPin);
-  sLeft.write(0);
-  sRight.write(0);
+  myServo.attach(servoRightPin);
+  myServo.write(0);
   
   // Humidity Sensor
   pinMode(humVCC, OUTPUT);
@@ -141,12 +137,10 @@ void loop() {
     servoOpen = !servoOpen;
 
     if (servoOpen) {
-      sLeft.write(45);
-      sRight.write(45);
+      myServo.write(45);
       digitalWrite(esp32, HIGH);
     } else {
-      sLeft.write(0);
-      sRight.write(0);
+      myServo.write(0);
       digitalWrite(esp32, LOW);
     }
     
