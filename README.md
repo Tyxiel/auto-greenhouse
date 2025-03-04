@@ -31,7 +31,7 @@ https://dl.espressif.com/dl/package_esp32_index.json
 #### Arduino MEGA (2560)
 <ul>
   <li>1 12V AC/DC (Used on the fan)</li>
-  <li>4 resistors (2 220 ohns, 1 10k ohns, 1 1k ohns)</li>
+  <li>4 resistors (2 220 ohns, 1 1k ohns, 1 10k ohns)</li>
   <li>1 LCD</li>
   <li>1 button</li>
   <li>1 servo</li>
