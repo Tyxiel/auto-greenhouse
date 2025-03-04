@@ -12,11 +12,6 @@ const byte db7 = 7;
 
 LiquidCrystal lcd(rs, e, db4, db5, db6, db7);
 
-// Servo FAN
-const byte servoPin = 22;
-Servo myServo;
-int servoPosition = 0;
-
 // Servos CELLING
 Servo sLeft;
 const byte servoLeftPin = 38;
@@ -60,10 +55,6 @@ const byte relayDrainage = 10;
 void setup() {
   // LCD
   lcd.begin(16, 2);
-
-  // Servo FAN
-  myServo.attach(servoPin);
-  myServo.write(servoPosition);
   
   // Servo CELLING
   sLeft.attach(servoLeftPin);
@@ -141,19 +132,13 @@ void loop() {
   // Temperature
   if(temperature > 100) {
     digitalWrite(fan, HIGH);
-    servoPosition = 180;
   } else {
     digitalWrite(fan, LOW);
-    servoPosition = 0;
   }
-
-  myServo.write(servoPosition);
 
   currentState = digitalRead(buttonPin);
   if (currentState == LOW && lastButtonState == HIGH) {
     servoOpen = !servoOpen;
-
-    Serial.println("ABRIIUU");
 
     if (servoOpen) {
       sLeft.write(45);
