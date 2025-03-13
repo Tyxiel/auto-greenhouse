@@ -9,18 +9,23 @@ const byte db4 = 4;
 const byte db5 = 5;
 const byte db6 = 6;
 const byte db7 = 7;
-
 LiquidCrystal lcd(rs, e, db4, db5, db6, db7);
 
-// Servo CELLING
+// Servo CEILING
 Servo myServo;
 const byte servoRightPin = 44;
 
-// Button
+// Button for Servo
 const byte buttonPin = 32;
 bool lastButtonState = LOW;
 bool currentState = LOW;
 bool servoOpen = false;
+
+// Button for Fan
+const byte fanButton = 33;  // Button to toggle fan on/off
+bool lastFanButtonState = HIGH;  // Using INPUT_PULLUP: button is HIGH when not pressed
+bool currentFanButtonState = HIGH;
+bool fanEnabled = false;         // Fan starts off
 
 // Humidity Sensor
 const byte humVCC = 12;
@@ -31,13 +36,7 @@ unsigned short int humidity = 0;
 const byte brightnessSensor = A1;
 unsigned short int brightness = 0;
 
-// Temperature Sensor (LM35)
-const byte lm35 = A5;
-const byte powerSupply = 30;
-unsigned short int tempValue = 0;
-float temperature = 0;
-
-// Fan
+// Fan (controlled by the new fan button)
 const byte fan = 8;
 
 // ESP32
@@ -54,7 +53,7 @@ void setup() {
   // LCD
   lcd.begin(16, 2);
   
-  // Servo CELLING
+  // Servo CEILING
   myServo.attach(servoRightPin);
   myServo.write(0);
   
@@ -62,17 +61,13 @@ void setup() {
   pinMode(humVCC, OUTPUT);
   pinMode(humSensor, INPUT);
   
-  // Brigthness Sensor
+  // Brightness Sensor
   pinMode(brightnessSensor, INPUT);
-
-  // Temperature Sensor
-  pinMode(lm35, INPUT);
-  pinMode(powerSupply, OUTPUT);
-  digitalWrite(powerSupply, HIGH);
 
   // Fan
   pinMode(fan, OUTPUT);
-  
+  digitalWrite(fan, LOW);  // Explicitly start fan off
+
   // LED
   pinMode(ledPin, OUTPUT);
 
@@ -82,25 +77,31 @@ void setup() {
   digitalWrite(relayIrrigation, LOW);
   digitalWrite(relayDrainage, LOW);
 
-  // Button
+  // Button for servo
   pinMode(buttonPin, INPUT_PULLUP);
+  
+  // Button for fan
+  pinMode(fanButton, INPUT_PULLUP);
 
   // ESP32
   pinMode(esp32, OUTPUT);
 
   // Serial
   Serial.begin(9600);
+  
+  // Print fan status to LCD on startup
+  lcd.setCursor(10, 1);
+  lcd.print("FAN OFF");
 }
 
 void loop() {
   reset();
   humRead();
   brightRead();
-  tempRead();
   delay(500);
   
+  // Display humidity result on LCD and control irrigation/drainage relays
   lcd.setCursor(9, 0);
-  // Humidity
   if (humidity < 25) {
     digitalWrite(relayIrrigation, HIGH);
     digitalWrite(relayDrainage, LOW);
@@ -117,25 +118,19 @@ void loop() {
     Serial.println("Both pumps OFF");
   }
 
-  // Brightness
-  if(brightness < 75) {
+  // Brightness management for LED
+  if (brightness < 75) {
     digitalWrite(ledPin, HIGH);
     Serial.println("LEDs ON");
   } else {
     digitalWrite(ledPin, LOW);
   }
 
-  // Temperature
-  if(temperature > 100) {
-    digitalWrite(fan, HIGH);
-  } else {
-    digitalWrite(fan, LOW);
-  }
-
+  // Button for servo (toggle ceiling servo and esp32 signal)
   currentState = digitalRead(buttonPin);
   if (currentState == LOW && lastButtonState == HIGH) {
     servoOpen = !servoOpen;
-
+    Serial.println("Servo button pressed");
     if (servoOpen) {
       myServo.write(45);
       digitalWrite(esp32, HIGH);
@@ -143,11 +138,37 @@ void loop() {
       myServo.write(0);
       digitalWrite(esp32, LOW);
     }
-    
-    delay(250);
   }
-
   lastButtonState = currentState;
+  
+  // Fan toggle button logic
+  currentFanButtonState = digitalRead(fanButton);
+  
+  // Debug: print current fan button state
+  Serial.print("Fan Button State: ");
+  Serial.println(currentFanButtonState);
+  
+  // Since using INPUT_PULLUP, a press is detected when the button reads LOW.
+  if (currentFanButtonState == LOW && lastFanButtonState == HIGH) {
+    fanEnabled = !fanEnabled;
+    
+    if (fanEnabled) {
+      digitalWrite(fan, HIGH);
+      Serial.println("Fan turned ON");
+    } else {
+      digitalWrite(fan, LOW);
+      Serial.println("Fan turned OFF");
+    }
+  }
+  lastFanButtonState = currentFanButtonState;
+  
+  // Always display the fan status on the LCD at a fixed position.
+  lcd.setCursor(10, 1);
+  if (fanEnabled) {
+    lcd.print("FAN ON ");
+  } else {
+    lcd.print("FAN OFF");
+  }
   
   delay(500);
 }
@@ -157,10 +178,10 @@ void humRead() {
   delay(20);
   
   humidity = analogRead(humSensor);
-  // Tinkercad
+  // Tinkercad simulation:
   // humidity = map(humidity, 0, 872, 0, 100);
 
-  // Real Life
+  // Real-life calibration (adjust as needed)
   humidity = map(humidity, 1023, 372, 0, 100);
   
   digitalWrite(humVCC, LOW);
@@ -179,27 +200,8 @@ void brightRead() {
   lcd.print("LUM: " + String(brightness));
 }
 
-void tempRead() {
-  tempValue = analogRead(lm35);
-  float voltage = tempValue * (5.0 / 1023.0);
-  temperature = voltage * 100;
-
-  Serial.println("Temperature: " + String(temperature) + " °C");
-  // Exibição da temperatura na LCD, atualizando a posição desejada
-  char tempString[6];
-  dtostrf(temperature, 5, 1, tempString);
-  lcd.setCursor(7, 1);
-  lcd.print("T: ");
-  lcd.setCursor(9, 1);
-  lcd.print(tempString);
-  lcd.print(" C");
-}
-
-// Reset LCD, Piezo and LED
+// Reset LCD and add a blank line in Serial (currently only resets the LCD)
 void reset() {
-  // LCD
   lcd.clear();
-
-  // Serial
   Serial.println(" ");
 }
