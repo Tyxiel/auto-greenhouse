@@ -2,12 +2,12 @@
   #include <HTTPClient.h>
 
   // Configurações de Wi-Fi
-  const char* ssid = "Flávio";
-  const char* password = "Senha1234";
+  const char* ssid = "SEU_SSID";
+  const char* password = "SUA_SENHA";
 
   // Configurações do CallMeBot
   const String token = "5475968";
-  const String phoneNumber = "557996919880";
+  const String phoneNumber = "SEU_TELEFONE";
   const String message = "Olá, esta é uma mensagem enviada pelo ESP32 via CallMeBot!";
 
   void setup() {
