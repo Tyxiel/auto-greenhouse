@@ -43,8 +43,8 @@ const byte fan = 8;
 const byte ledPin = 11;
 
 // Relays
-const byte relayIrrigation = 9;
-const byte relayDrainage = 10;
+const byte relayIrrigation = 52;
+const byte relayDrainage = 53;
 
 void setup() {
   // LCD
