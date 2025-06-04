@@ -43,8 +43,27 @@ const byte fan = 8;
 const byte ledPin = 11;
 
 // Relays
-const byte relayIrrigation = 52;
-const byte relayDrainage = 53;
+const byte relayIrrigation = 52; // Mantendo apenas a bomba de irrigação
+
+// ====================================================================
+// Variáveis para o controle temporizado da bomba de irrigação
+// ====================================================================
+enum PumpState { OFF, RUNNING_TIMED }; // Estados da bomba: desligada, rodando por tempo
+static PumpState currentPumpState = OFF; // Estado inicial da bomba
+static unsigned long pumpActionTime = 0; // Armazena o tempo da última mudança de estado da bomba
+
+// DURAÇÃO QUE A BOMBA FICARÁ LIGADA POR CICLO (em milissegundos)
+// Ajuste este valor cuidadosamente para a sua estufa e bomba de 3000L/h.
+// Para simular o enchimento de 1 litro com uma bomba de 3000L/h (aprox. 0.833 L/s),
+// o tempo necessário é de 1L / 0.833 L/s = 1.2 segundos.
+const unsigned long PUMP_RUN_DURATION_MS = 1200; // 1.2 segundos para 1 litro
+
+// TEMPO MÍNIMO QUE A BOMBA DEVE FICAR DESLIGADA ANTES DE UM NOVO CICLO (em milissegundos)
+// Isso evita ligar a bomba muito rapidamente após um ciclo.
+// 60 segundos = 60000 milissegundos.
+const unsigned long PUMP_MIN_OFF_TIME_MS = 60000;
+// ====================================================================
+
 
 void setup() {
   // LCD
@@ -71,9 +90,7 @@ void setup() {
 
   // Relays
   pinMode(relayIrrigation, OUTPUT);
-  pinMode(relayDrainage, OUTPUT);
-  digitalWrite(relayIrrigation, LOW);
-  digitalWrite(relayDrainage, LOW);
+  digitalWrite(relayIrrigation, LOW); // Garante que a bomba comece desligada
 
   // Button for servo
   pinMode(buttonPin, INPUT_PULLUP);
@@ -96,31 +113,55 @@ void setup() {
 }
 
 void loop() {
-  // Não chame reset() aqui para evitar o flickering do LCD
   Serial.println(" "); // Mantém a linha em branco no Serial, se desejado
 
   humRead();
   brightRead();
   delay(500); // Mantido para cadência de leitura dos sensores
 
-  // Display humidity result on LCD and control irrigation/drainage relays
-  lcd.setCursor(9, 0); // Posição para status de irrigação/drenagem
-  if (humidity < 25) {
-    digitalWrite(relayIrrigation, HIGH);
-    digitalWrite(relayDrainage, LOW);
-    Serial.println("Irrigation pump ON");
-    lcd.print("Irr ON "); // Adicionado espaço para sobrescrever "Drn ON" se necessário
-  } else if (humidity > 60) {
-    digitalWrite(relayIrrigation, LOW);
-    digitalWrite(relayDrainage, HIGH);
-    Serial.println("Drainage pump ON");
-    lcd.print("Drn ON "); // Adicionado espaço para sobrescrever "Irr ON" se necessário
-  } else {
-    digitalWrite(relayIrrigation, LOW);
-    digitalWrite(relayDrainage, LOW);
-    Serial.println("Both pumps OFF");
-    lcd.print("       "); // Limpa o espaço se nenhum estiver ativo
+  // ====================================================================
+  // Controle da bomba de irrigação usando máquina de estados
+  // ====================================================================
+  lcd.setCursor(9, 0); // Posição para status de irrigação
+
+  switch (currentPumpState) {
+    case OFF:
+      // Se a umidade estiver baixa E o tempo mínimo de desligamento já passou
+      if (humidity < 25 && (millis() - pumpActionTime >= PUMP_MIN_OFF_TIME_MS)) {
+        digitalWrite(relayIrrigation, HIGH); // Liga a bomba
+        Serial.println("Irrigation pump ON (timed cycle)");
+        lcd.print("Irr ON "); // Exibe status no LCD
+        currentPumpState = RUNNING_TIMED; // Muda para o estado de "rodando por tempo"
+        pumpActionTime = millis(); // Registra o tempo de início deste ciclo
+      } else if (humidity < 25 && (millis() - pumpActionTime < PUMP_MIN_OFF_TIME_MS)) {
+        // Umidade baixa, mas ainda no período de resfriamento
+        digitalWrite(relayIrrigation, LOW); // Garante que esteja desligada
+        Serial.println("Irrigation needed, but in cooldown.");
+        lcd.print("Wait   "); // Indica espera no LCD
+      } else {
+        // Umidade OK, garante que a bomba esteja desligada e limpa o display
+        digitalWrite(relayIrrigation, LOW);
+        Serial.println("Irrigation pump OFF (humidity OK)");
+        lcd.print("       "); // Limpa o status de irrigação no LCD
+      }
+      break;
+
+    case RUNNING_TIMED:
+      // Se o tempo de execução da bomba já passou
+      if (millis() - pumpActionTime >= PUMP_RUN_DURATION_MS) {
+        digitalWrite(relayIrrigation, LOW); // Desliga a bomba
+        Serial.println("Irrigation pump OFF (time limit reached)");
+        lcd.print("       "); // Limpa o status de irrigação no LCD
+        currentPumpState = OFF; // Volta para o estado "desligada"
+        pumpActionTime = millis(); // Registra o tempo em que a bomba foi desligada (início do resfriamento)
+      } else {
+        // A bomba ainda está rodando, mantém ligada
+        // Serial.println("Irrigation pump still running..."); // Pode ser comentado para menos spam no Serial
+        lcd.print("Irr ON "); // Mantém o status no LCD
+      }
+      break;
   }
+  // ====================================================================
 
   // Brightness management for LED
   if (brightness < 75) {
@@ -214,6 +255,7 @@ void brightRead() {
     lcd.print(String(brightness) + " ");
   }
 }
+
 // A função reset() foi modificada para não limpar o LCD,
 // apenas para imprimir uma linha em branco no Serial.
 void reset() {
