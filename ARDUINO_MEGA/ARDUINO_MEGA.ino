@@ -54,9 +54,9 @@ static unsigned long pumpActionTime = 0; // Armazena o tempo da última mudança
 
 // DURAÇÃO QUE A BOMBA FICARÁ LIGADA POR CICLO (em milissegundos)
 // Ajuste este valor cuidadosamente para a sua estufa e bomba de 3000L/h.
-// Para simular o enchimento de 1 litro com uma bomba de 3000L/h (aprox. 0.833 L/s),
-// o tempo necessário é de 1L / 0.833 L/s = 1.2 segundos.
-const unsigned long PUMP_RUN_DURATION_MS = 1200; // 1.2 segundos para 1 litro
+// Para simular o enchimento de 800ml com uma bomba de 3000L/h (aprox. 0.833 L/s),
+// o tempo necessário é de 0.8L / 0.833 L/s = 0.96 segundos.
+const unsigned long PUMP_RUN_DURATION_MS = 960; // 0.96 segundos para 800ml
 
 // TEMPO MÍNIMO QUE A BOMBA DEVE FICAR DESLIGADA ANTES DE UM NOVO CICLO (em milissegundos)
 // Isso evita ligar a bomba muito rapidamente após um ciclo.
