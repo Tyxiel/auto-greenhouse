@@ -60,8 +60,8 @@ const unsigned long PUMP_RUN_DURATION_MS = 1200; // 1.2 segundos para 1 litro
 
 // TEMPO MÍNIMO QUE A BOMBA DEVE FICAR DESLIGADA ANTES DE UM NOVO CICLO (em milissegundos)
 // Isso evita ligar a bomba muito rapidamente após um ciclo.
-// 60 segundos = 60000 milissegundos.
-const unsigned long PUMP_MIN_OFF_TIME_MS = 60000;
+// Reduzido para 10 segundos para simulação e exibição no LCD.
+const unsigned long PUMP_MIN_OFF_TIME_MS = 10000; // 10 segundos
 // ====================================================================
 
 
@@ -117,7 +117,7 @@ void loop() {
 
   humRead();
   brightRead();
-  delay(500); // Mantido para cadência de leitura dos sensores
+  delay(500); // Mantido para cadência de leitura dos sensores e atualização do LCD
 
   // ====================================================================
   // Controle da bomba de irrigação usando máquina de estados
@@ -137,12 +137,23 @@ void loop() {
         // Umidade baixa, mas ainda no período de resfriamento
         digitalWrite(relayIrrigation, LOW); // Garante que esteja desligada
         Serial.println("Irrigation needed, but in cooldown.");
-        lcd.print("Wait   "); // Indica espera no LCD
+
+        unsigned long remainingTime = PUMP_MIN_OFF_TIME_MS - (millis() - pumpActionTime);
+        unsigned int remainingSeconds = remainingTime / 1000;
+
+        lcd.print("CD:"); // Cooldown (3 caracteres)
+        if (remainingSeconds < 10) {
+          lcd.print(" "); // Adiciona um espaço para alinhar dígitos únicos
+        }
+        lcd.print(remainingSeconds); // 1 ou 2 caracteres
+        lcd.print("s "); // "s" + espaço (2 caracteres)
+        // Total: 3 + (1 ou 0) + (1 ou 2) + 2 = 6 ou 7 caracteres
+        // Isso se encaixa no espaço de 7 caracteres disponível.
       } else {
         // Umidade OK, garante que a bomba esteja desligada e limpa o display
         digitalWrite(relayIrrigation, LOW);
         Serial.println("Irrigation pump OFF (humidity OK)");
-        lcd.print("       "); // Limpa o status de irrigação no LCD
+        lcd.print("       "); // Limpa o status de irrigação no LCD (7 espaços)
       }
       break;
 
@@ -157,7 +168,7 @@ void loop() {
       } else {
         // A bomba ainda está rodando, mantém ligada
         // Serial.println("Irrigation pump still running..."); // Pode ser comentado para menos spam no Serial
-        lcd.print("Irr ON "); // Mantém o status no LCD
+        lcd.print("Irr ON "); // Mantém o status no LCD (7 caracteres)
       }
       break;
   }
@@ -215,7 +226,9 @@ void loop() {
     lcd.print("FAN OFF");
   }
 
-  delay(500); // Mantido para cadência geral do loop
+  // O delay(500) aqui ajuda a cadenciar as leituras e atualizações do LCD,
+  // mas o controle da bomba usa millis() para ser não-bloqueante.
+  delay(500);
 }
 
 void humRead() {
