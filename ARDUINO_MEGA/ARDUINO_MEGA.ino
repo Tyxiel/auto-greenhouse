@@ -25,7 +25,7 @@ bool servoOpen = false;
 const byte fanButton = 33;  // Button to toggle fan on/off
 bool lastFanButtonState = HIGH;  // Using INPUT_PULLUP: button is HIGH when not pressed
 bool currentFanButtonState = HIGH;
-bool fanEnabled = false;         // Fan starts off
+bool fanEnabled = false;          // Fan starts off
 
 // Humidity Sensor
 const byte humVCC = 12;
@@ -43,17 +43,24 @@ const byte fan = 8;
 const byte ledPin = 11;
 
 // Relays
-const byte relayIrrigation = 52;
-const byte relayDrainage = 53;
+const byte relayIrrigation = 52; // Maintaining only the irrigation pump
+
+// ====================================================================
+// Variáveis para o controle da bomba de irrigação (contínuo)
+// ====================================================================
+// A bomba agora liga e permanece ligada enquanto a umidade estiver abaixo do limiar.
+// Ela desliga assim que a umidade sobe acima do limiar.
+// ====================================================================
+
 
 void setup() {
   // LCD
   lcd.begin(16, 2);
-  lcd.clear(); // Limpa o LCD apenas uma vez na inicialização
+  lcd.clear(); // Clears the LCD only once at initialization
 
   // Servo CEILING
   myServo.attach(servoRightPin);
-  myServo.write(0); // Garante que o servo comece fechado
+  myServo.write(0); // Ensures the servo starts closed
 
   // Humidity Sensor
   pinMode(humVCC, OUTPUT);
@@ -71,9 +78,7 @@ void setup() {
 
   // Relays
   pinMode(relayIrrigation, OUTPUT);
-  pinMode(relayDrainage, OUTPUT);
-  digitalWrite(relayIrrigation, LOW);
-  digitalWrite(relayDrainage, LOW);
+  digitalWrite(relayIrrigation, HIGH); // Ensures the pump starts physically off (inverted logic)
 
   // Button for servo
   pinMode(buttonPin, INPUT_PULLUP);
@@ -96,31 +101,28 @@ void setup() {
 }
 
 void loop() {
-  // Não chame reset() aqui para evitar o flickering do LCD
-  Serial.println(" "); // Mantém a linha em branco no Serial, se desejado
+  Serial.println(" "); // Keeps the line blank in Serial, if desired
 
   humRead();
   brightRead();
-  delay(500); // Mantido para cadência de leitura dos sensores
+  delay(500); // Maintained for sensor reading cadence and LCD update
 
-  // Display humidity result on LCD and control irrigation/drainage relays
-  lcd.setCursor(9, 0); // Posição para status de irrigação/drenagem
-  if (humidity < 25) {
-    digitalWrite(relayIrrigation, HIGH);
-    digitalWrite(relayDrainage, LOW);
-    Serial.println("Irrigation pump ON");
-    lcd.print("Irr ON "); // Adicionado espaço para sobrescrever "Drn ON" se necessário
-  } else if (humidity > 60) {
-    digitalWrite(relayIrrigation, LOW);
-    digitalWrite(relayDrainage, HIGH);
-    Serial.println("Drainage pump ON");
-    lcd.print("Drn ON "); // Adicionado espaço para sobrescrever "Irr ON" se necessário
+  // ====================================================================
+  // Controle da bomba de irrigação (contínuo baseado na umidade)
+  // Lógica invertida para o relé: HIGH = OFF, LOW = ON
+  // ====================================================================
+  lcd.setCursor(9, 0); // Position for irrigation status
+
+  if (humidity < 33) { // Changed threshold from 25 to 33
+    digitalWrite(relayIrrigation, LOW); // Turns the pump physically ON (LOW in code)
+    Serial.println("Irrigation pump ON (continuous)");
+    lcd.print("Irr ON "); // Displays status on LCD (7 characters)
   } else {
-    digitalWrite(relayIrrigation, LOW);
-    digitalWrite(relayDrainage, LOW);
-    Serial.println("Both pumps OFF");
-    lcd.print("       "); // Limpa o espaço se nenhum estiver ativo
+    digitalWrite(relayIrrigation, HIGH); // Turns the pump physically OFF (HIGH in code)
+    Serial.println("Irrigation pump OFF (humidity OK)");
+    lcd.print("       "); // Clears the irrigation status on the LCD (7 spaces)
   }
+  // ====================================================================
 
   // Brightness management for LED
   if (brightness < 75) {
@@ -132,29 +134,29 @@ void loop() {
 
   // Button for servo (toggle ceiling servo)
   currentState = digitalRead(buttonPin);
-  // Detecta a transição de HIGH para LOW (botão pressionado)
+  // Detects the transition from HIGH to LOW (button pressed)
   if (currentState == LOW && lastButtonState == HIGH) {
     servoOpen = !servoOpen;
     Serial.println("Servo button pressed");
     if (servoOpen) {
-      myServo.write(45); // Abre o servo
+      myServo.write(45); // Opens the servo
     } else {
-      myServo.write(0);  // Fecha o servo
+      myServo.write(0);  // Closes the servo
     }
   }
-  lastButtonState = currentState; // Atualiza o estado anterior do botão
+  lastButtonState = currentState; // Updates the previous button state
 
   // Fan toggle button logic
   currentFanButtonState = digitalRead(fanButton);
 
-  // Debug: print current fan button state (útil para depuração)
+  // Debug: print current fan button state (useful for debugging)
   Serial.print("Fan Button State: ");
   Serial.println(currentFanButtonState);
 
   // Since using INPUT_PULLUP, a press is detected when the button reads LOW.
-  // Detecta a transição de HIGH para LOW (botão pressionado)
+  // Detects the transition from HIGH to LOW (button pressed)
   if (currentFanButtonState == LOW && lastFanButtonState == HIGH) {
-    fanEnabled = !fanEnabled; // Inverte o estado do ventilador
+    fanEnabled = !fanEnabled; // Inverts the fan state
 
     if (fanEnabled) {
       digitalWrite(fan, HIGH);
@@ -164,32 +166,33 @@ void loop() {
       Serial.println("Fan turned OFF");
     }
   }
-  lastFanButtonState = currentFanButtonState; // Atualiza o estado anterior do botão
+  lastFanButtonState = currentFanButtonState; // Updates the previous button state
 
   // Always display the fan status on the LCD at a fixed position.
-  lcd.setCursor(10, 1); // Posição para status do ventilador
+  lcd.setCursor(10, 1); // Position for fan status
   if (fanEnabled) {
-    lcd.print("FAN ON "); // Adicionado espaço para sobrescrever "OFF"
+    lcd.print("FAN ON "); // Added space to overwrite "OFF"
   } else {
     lcd.print("FAN OFF");
   }
 
-  delay(500); // Mantido para cadência geral do loop
+  // The delay(500) here helps to cadence readings and LCD updates.
+  delay(500);
 }
 
 void humRead() {
-  digitalWrite(humVCC, HIGH); // Liga o VCC do sensor de umidade
-  delay(20); // Pequeno delay para estabilização
+  digitalWrite(humVCC, HIGH); // Turns on the VCC of the humidity sensor
+  delay(20); // Small delay for stabilization
 
   humidity = analogRead(humSensor);
   // Real-life calibration (adjust as needed)
-  humidity = map(humidity, 1023, 372, 0, 100); // Mapeia o valor bruto para porcentagem de 0-100
+  humidity = map(humidity, 1023, 372, 0, 100); // Maps the raw value to a percentage from 0-100
 
-  digitalWrite(humVCC, LOW); // Desliga o VCC do sensor para economizar energia/evitar corrosão
+  digitalWrite(humVCC, LOW); // Turns off the sensor VCC to save energy/prevent corrosion
 
   Serial.println("Humidity: " + String(humidity));
-  lcd.setCursor(3, 0); // Posição para o valor da umidade
-  // Garante que o valor da umidade seja preenchido com espaços para limpar dígitos anteriores
+  lcd.setCursor(3, 0); // Position for the humidity value
+  // Ensures the humidity value is padded with spaces to clear previous digits
   if (humidity < 10) {
     lcd.print(String(humidity) + "  ");
   } else if (humidity < 100) {
@@ -201,22 +204,23 @@ void humRead() {
 
 void brightRead() {
   brightness = analogRead(brightnessSensor);
-  brightness = map(brightness, 100, 970, 100, 0); // Mapeamento correto para sua necessidade
+  brightness = map(brightness, 100, 970, 100, 0); // Correct mapping for your needs
 
   Serial.println("Brightness: " + String(brightness));
-  lcd.setCursor(5, 1); // Posição para o valor da luminosidade
-  // Garante que o valor da luminosidade seja preenchido com espaços para limpar dígitos anteriores
+  lcd.setCursor(5, 1); // Position for the brightness value
+  // Ensures the brightness value is padded with spaces to clear previous digits
   if (brightness < 10) {
     lcd.print(String(brightness) + "   ");
   } else if (brightness < 100) {
     lcd.print(String(brightness) + "  ");
-  } else if (brightness <= 100) { // Adicionado <= 100 para cobrir o valor máximo
+  } else if (brightness <= 100) { // Added <= 100 to cover the maximum value
     lcd.print(String(brightness) + " ");
   }
 }
-// A função reset() foi modificada para não limpar o LCD,
-// apenas para imprimir uma linha em branco no Serial.
+
+// The reset() function was modified not to clear the LCD,
+// only to print a blank line in Serial.
 void reset() {
-  // lcd.clear(); // Removido para evitar flickering
+  // lcd.clear(); // Removed to avoid flickering
   Serial.println(" ");
 }
